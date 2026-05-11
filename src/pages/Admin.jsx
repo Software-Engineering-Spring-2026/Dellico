@@ -4,7 +4,8 @@ function Admin() {
   const [activeTab, setActiveTab] = useState("statistics");
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
-  const [companies, setCompanies] = useState([]);
+  const [pendingCompanies, setPendingCompanies] = useState([]);
+  const [allCompanies, setAllCompanies] = useState([]);
   const [flaggedProjects, setFlaggedProjects] = useState([]);
   const [appeals, setAppeals] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
@@ -27,6 +28,7 @@ function Admin() {
   function loadData() {
     // Load users from registration
     const registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
+    
     // Add default admin if not exists
     const hasAdmin = registeredUsers.some(u => u.email === "admin@guc.edu.eg");
     if (!hasAdmin) {
@@ -46,9 +48,13 @@ function Admin() {
     const savedCourses = JSON.parse(localStorage.getItem("courses")) || [];
     setCourses(savedCourses);
     
-    // Load companies (employers with Pending status)
-    const companies_list = registeredUsers.filter(u => u.role === "employer");
-    setCompanies(companies_list);
+    // ✅ FIX: Separate companies - ALL employers and PENDING employers only
+    const allEmployers = registeredUsers.filter(u => u.role === "employer");
+    setAllCompanies(allEmployers);
+    
+    // Only show employers with "Pending" status in Company Verification tab
+    const pendingOnly = allEmployers.filter(u => u.verificationStatus === "Pending");
+    setPendingCompanies(pendingOnly);
     
     // Load flagged projects
     const flagged = JSON.parse(localStorage.getItem("flaggedProjects")) || [];
@@ -66,7 +72,12 @@ function Admin() {
   function saveUsers(updatedUsers) {
     localStorage.setItem("registeredUsers", JSON.stringify(updatedUsers));
     setUsers(updatedUsers);
-    setCompanies(updatedUsers.filter(u => u.role === "employer"));
+    
+    // Update companies lists
+    const allEmployers = updatedUsers.filter(u => u.role === "employer");
+    setAllCompanies(allEmployers);
+    const pendingOnly = allEmployers.filter(u => u.verificationStatus === "Pending");
+    setPendingCompanies(pendingOnly);
   }
 
   // Req 52: View list of all users
@@ -76,6 +87,7 @@ function Admin() {
     );
     saveUsers(updatedUsers);
     setMessage(`User ${email} ${updatedUsers.find(u => u.email === email).isActive ? "activated" : "deactivated"}`);
+    setTimeout(() => setMessage(""), 3000);
   }
 
   // Req 53: Create other admin accounts
@@ -102,6 +114,7 @@ function Admin() {
     saveUsers([...users, newAdminUser]);
     setNewAdmin({ username: "", password: "" });
     setMessage(`New admin account created: ${newAdmin.username}`);
+    setTimeout(() => setMessage(""), 3000);
   }
 
   // Req 55: Create/Edit/Delete courses
@@ -153,28 +166,29 @@ function Admin() {
   }
 
   function verifyCompany(companyEmail, status) {
-  const updatedUsers = users.map(user => {
-    if (user.email === companyEmail) {
-      return { ...user, verificationStatus: status };
-    }
-    return user;
-  });
-  saveUsers(updatedUsers);
-  setSelectedCompany(null);
-  setMessage(`Company ${status} successfully`);
-  
-  // ✅ Only ONE declaration - remove the duplicate
-  const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
-  notifications.push({
-    id: Date.now(),
-    to: companyEmail,
-    message: `Your company application has been ${status}`,
-    read: false,
-    createdAt: new Date().toISOString(),
-    type: "company_verification"
-  });
-  localStorage.setItem("notifications", JSON.stringify(notifications));
-}
+    const updatedUsers = users.map(user => {
+      if (user.email === companyEmail) {
+        return { ...user, verificationStatus: status };
+      }
+      return user;
+    });
+    saveUsers(updatedUsers);
+    setSelectedCompany(null);
+    setMessage(`Company ${status} successfully`);
+    
+    const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+    notifications.push({
+      id: Date.now(),
+      to: companyEmail,
+      message: `Your company application has been ${status}`,
+      read: false,
+      createdAt: new Date().toISOString(),
+      type: "company_verification"
+    });
+    localStorage.setItem("notifications", JSON.stringify(notifications));
+    
+    setTimeout(() => setMessage(""), 3000);
+  }
 
   // Req 57-58: Handle linking requests
   function handleLinkingRequest(request, action) {
@@ -185,7 +199,6 @@ function Admin() {
     setLinkingRequests(updatedRequests);
     
     if (action === "approved") {
-      // Update instructor's courses
       if (request.type === "link") {
         const instructorCourses = JSON.parse(localStorage.getItem("instructorCourses")) || ["Bachelor Project"];
         if (!instructorCourses.includes(request.courseName)) {
@@ -198,7 +211,6 @@ function Admin() {
         localStorage.setItem("instructorCourses", JSON.stringify(updatedCourses));
       }
       
-      // Notify instructor
       const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
       notifications.push({
         id: Date.now(),
@@ -239,6 +251,7 @@ function Admin() {
       });
       localStorage.setItem("notifications", JSON.stringify(notifications));
     }
+    setTimeout(() => setMessage(""), 3000);
   }
 
   function activateProject(projectId) {
@@ -248,6 +261,7 @@ function Admin() {
     localStorage.setItem("flaggedProjects", JSON.stringify(updatedFlags));
     setFlaggedProjects(updatedFlags);
     setMessage("Project activated");
+    setTimeout(() => setMessage(""), 3000);
   }
 
   function viewAppeal(appeal) {
@@ -258,16 +272,16 @@ function Admin() {
   function getStatistics() {
     const students = users.filter(u => u.role === "student");
     const instructors = users.filter(u => u.role === "instructor");
-    const employers = users.filter(u => u.role === "employer" && u.verificationStatus === "Accepted");
+    const verifiedEmployers = users.filter(u => u.role === "employer" && u.verificationStatus === "Accepted");
     const allProjects = JSON.parse(localStorage.getItem("allProjects")) || [];
     
     return {
       totalStudents: students.length,
       totalInstructors: instructors.length,
-      totalEmployers: employers.length,
+      totalEmployers: verifiedEmployers.length,
       totalProjects: allProjects.length,
       totalCourses: courses.length,
-      pendingCompanies: companies.filter(c => c.verificationStatus === "Pending").length,
+      pendingCompanies: pendingCompanies.length,
       flaggedProjects: flaggedProjects.length
     };
   }
@@ -347,33 +361,33 @@ function Admin() {
         </div>
       )}
 
-      {/* Req 52, 54: User Management */}
+      {/* Req 52, 54: User Management - Shows ALL users */}
       {activeTab === "users" && (
         <div className="admin-section">
           <h2>User Management</h2>
           
-          {/* Req 53: Create Admin */}
           <div className="create-admin-section">
             <h3>Create New Administrator</h3>
-            <input
-              placeholder="Admin Email"
-              value={newAdmin.username}
-              onChange={(e) => setNewAdmin({ ...newAdmin, username: e.target.value })}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={newAdmin.password}
-              onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
-            />
-            <button className="primary" onClick={createAdmin}>Create Admin Account</button>
+            <div className="create-admin-form">
+              <input
+                placeholder="Admin Email"
+                value={newAdmin.username}
+                onChange={(e) => setNewAdmin({ ...newAdmin, username: e.target.value })}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={newAdmin.password}
+                onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
+              />
+              <button className="primary" onClick={createAdmin}>Create Admin Account</button>
+            </div>
           </div>
           
-          {/* User List */}
-          <div className="user-list">
+          <div className="user-list-modern">
             <h3>All Users ({users.length})</h3>
-            <div className="users-table">
-              <table className="workspace-table">
+            <div className="users-table-container">
+              <table className="users-table-modern">
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -386,23 +400,32 @@ function Admin() {
                 <tbody>
                   {users.map((user, idx) => (
                     <tr key={idx}>
-                      <td>{user.firstName} {user.lastName}</td>
-                      <td>{user.email}</td>
-                      <td>
+                      <td data-label="Name">
+                        <div className="user-name-cell">
+                          <span className="user-avatar">
+                            {user.role === "admin" ? "👑" : 
+                             user.role === "student" ? "🎓" : 
+                             user.role === "instructor" ? "👨‍🏫" : "🏢"}
+                          </span>
+                          {user.firstName} {user.lastName}
+                        </div>
+                      </td>
+                      <td data-label="Email">{user.email}</td>
+                      <td data-label="Role">
                         <span className={`role-badge ${user.role}`}>
-                          {user.role === "admin" ? "👑 Admin" : 
-                           user.role === "student" ? "🎓 Student" :
-                           user.role === "instructor" ? "👨‍🏫 Instructor" : "🏢 Employer"}
+                          {user.role === "admin" ? "Admin" : 
+                           user.role === "student" ? "Student" :
+                           user.role === "instructor" ? "Instructor" : "Employer"}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Status">
                         <span className={`status-badge ${user.isActive !== false ? "active" : "inactive"}`}>
                           {user.isActive !== false ? "Active" : "Inactive"}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Action">
                         <button 
-                          className="secondary-btn"
+                          className={`action-btn ${user.isActive !== false ? "deactivate" : "activate"}`}
                           onClick={() => toggleUserStatus(user.email)}
                         >
                           {user.isActive !== false ? "Deactivate" : "Activate"}
@@ -417,17 +440,17 @@ function Admin() {
         </div>
       )}
 
-      {/* Req 14-18: Company Verification */}
+      {/* Req 14-18: Company Verification - Shows ONLY PENDING employers */}
       {activeTab === "companies" && (
         <div className="admin-section">
           <h2>Company Verification</h2>
           <p>Review employer applications and verify their documents</p>
           
           <div className="companies-list">
-            {companies.filter(c => c.verificationStatus === "Pending").length === 0 ? (
+            {pendingCompanies.length === 0 ? (
               <p>No pending company applications</p>
             ) : (
-              companies.filter(c => c.verificationStatus === "Pending").map((company, idx) => (
+              pendingCompanies.map((company, idx) => (
                 <div key={idx} className="list-card">
                   <h3>{company.companyName || company.firstName}</h3>
                   <p><strong>Email:</strong> {company.email}</p>
@@ -448,7 +471,6 @@ function Admin() {
             )}
           </div>
           
-          {/* Company Details Modal */}
           {selectedCompany && (
             <div className="modal-overlay" onClick={() => setSelectedCompany(null)}>
               <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -618,6 +640,7 @@ function Admin() {
                     localStorage.setItem("appeals", JSON.stringify(updatedAppeals));
                     setAppeals(updatedAppeals);
                     setMessage("Appeal marked as reviewed");
+                    setTimeout(() => setMessage(""), 3000);
                   }}>
                     Mark as Resolved
                   </button>

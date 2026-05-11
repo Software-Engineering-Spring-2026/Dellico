@@ -7,8 +7,7 @@ function Notifications() {
 
   useEffect(() => {
     loadNotifications();
-    // Refresh notifications every 10 seconds
-    const interval = setInterval(loadNotifications, 10000);
+    const interval = setInterval(loadNotifications, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -65,19 +64,23 @@ function Notifications() {
       case "appeal": return "📝";
       case "linking_request": return "🔗";
       case "company_verification": return "🏢";
+      case "message": return "💬";
+      case "internship": return "💼";
       default: return "🔔";
     }
   }
 
   function getNotificationColor(type) {
     switch(type) {
-      case "invitation": return "#3b82f6";
-      case "task_assignment": return "#10b981";
-      case "flag": return "#ef4444";
-      case "appeal": return "#f59e0b";
-      case "linking_request": return "#8b5cf6";
-      case "company_verification": return "#06b6d4";
-      default: return "#6b7280";
+      case "invitation": return "#3182ce";
+      case "task_assignment": return "#38a169";
+      case "flag": return "#e53e3e";
+      case "appeal": return "#d69e2e";
+      case "linking_request": return "#805ad5";
+      case "company_verification": return "#319795";
+      case "message": return "#3182ce";
+      case "internship": return "#38a169";
+      default: return "#4a5568";
     }
   }
 
@@ -97,7 +100,7 @@ function Notifications() {
 
   return (
     <div className="notifications-modern">
-      {/* Header Section */}
+      {/* Header */}
       <div className="notifications-header-modern">
         <div className="header-left">
           <h1>Notifications</h1>
@@ -108,18 +111,10 @@ function Notifications() {
         </div>
         <div className="header-actions">
           <button className="action-btn mark-read" onClick={markAllAsRead}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-            Mark all read
+            📖 Mark all read
           </button>
           <button className="action-btn clear" onClick={clearAll}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-            </svg>
-            Clear all
+            🗑️ Clear all
           </button>
         </div>
       </div>
@@ -180,10 +175,7 @@ function Notifications() {
                       deleteNotification(notification.id);
                     }}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
+                    ✕
                   </button>
                 </div>
                 <div className="notification-meta">

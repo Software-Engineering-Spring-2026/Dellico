@@ -25,36 +25,50 @@ function InstructorInvitations() {
   }
 
   return (
-    <div className="project-form-card">
-      <h2>Project Invitations</h2>
-      <p>Receive, view, accept, or reject project invitations.</p>
+    <div className="invitations-container-modern">
+      <h1>Project Invitations</h1>
 
-      {invitations.map((inv) => (
-        <section className="profile-section" key={inv.id}>
-          <p><strong>Notification:</strong> New project invitation received.</p>
-          <p><strong>Project:</strong> {inv.project}</p>
-          <p><strong>From:</strong> {inv.from}</p>
-          <p><strong>Status:</strong> {inv.status}</p>
-
-          <div className="button-row">
-            <button
-              className="primary"
-              type="button"
-              onClick={() => updateStatus(inv.id, "Accepted")}
-            >
-              Accept
-            </button>
-
-            <button
-              className="secondary-btn"
-              type="button"
-              onClick={() => updateStatus(inv.id, "Rejected")}
-            >
-              Reject
-            </button>
-          </div>
-        </section>
-      ))}
+      {invitations.length === 0 ? (
+        <div className="no-invitations">
+          <p>No pending invitations</p>
+        </div>
+      ) : (
+        <div className="invitations-list-modern">
+          {invitations.map((inv) => (
+            <div key={inv.id} className="invitation-card">
+              <div className="invitation-badge">📩 New Invitation</div>
+              <div className="invitation-content">
+                <div className="invitation-row">
+                  <span className="label">Project:</span>
+                  <span className="value">{inv.project}</span>
+                </div>
+                <div className="invitation-row">
+                  <span className="label">From:</span>
+                  <span className="value">{inv.from}</span>
+                </div>
+                <div className="invitation-row">
+                  <span className="label">Status:</span>
+                  <span className="status-pending">{inv.status}</span>
+                </div>
+              </div>
+              <div className="invitation-actions">
+                <button 
+                  className="accept-btn" 
+                  onClick={() => updateStatus(inv.id, "Accepted")}
+                >
+                  ✓ Accept
+                </button>
+                <button 
+                  className="reject-btn" 
+                  onClick={() => updateStatus(inv.id, "Rejected")}
+                >
+                  ✗ Reject
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

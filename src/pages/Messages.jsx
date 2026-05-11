@@ -7,9 +7,9 @@ function Messages() {
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
+  const [showNewChat, setShowNewChat] = useState(false);
   
   const currentUser = localStorage.getItem("currentUserEmail");
-  const role = localStorage.getItem("role");
 
   useEffect(() => {
     loadMessages();
@@ -63,12 +63,12 @@ function Messages() {
     allMessages.push(message);
     localStorage.setItem("privateMessages", JSON.stringify(allMessages));
     
-    // ✅ REQ 28-30: Receive notification when private message received
+    // Send notification
     const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
     notifications.push({
       id: Date.now(),
       to: selectedConversation.user,
-      message: `${currentUser} sent you a private message: "${newMessage.substring(0, 50)}${newMessage.length > 50 ? '...' : ''}"`,
+      message: `💬 ${currentUser} sent you a message: "${newMessage.substring(0, 50)}${newMessage.length > 50 ? '...' : ''}"`,
       read: false,
       createdAt: new Date().toISOString(),
       type: "message"
@@ -78,7 +78,6 @@ function Messages() {
     setNewMessage("");
     loadMessages();
     
-    // Update the selected conversation with new message
     const updatedConv = conversations.find(c => c.user === selectedConversation.user);
     if (updatedConv) {
       updatedConv.lastMessage = newMessage;
@@ -89,6 +88,7 @@ function Messages() {
 
   function selectConversation(conversation) {
     setSelectedConversation(conversation);
+    setShowNewChat(false);
     
     // Mark messages as read
     const allMessages = JSON.parse(localStorage.getItem("privateMessages")) || [];
@@ -105,11 +105,13 @@ function Messages() {
   function startNewConversation(user) {
     const newConv = {
       user: user.email,
+      userName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
       lastMessage: "",
       lastMessageTime: new Date().toISOString(),
       unread: false
     };
     setSelectedConversation(newConv);
+    setShowNewChat(false);
     setNewMessage("");
   }
 
@@ -133,39 +135,46 @@ function Messages() {
 
   const filteredUsers = users.filter(u => 
     u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    `${u.firstName} ${u.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+    `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="messages-container">
+    <div className="messages-container-modern">
       <h1>Messages</h1>
       
-      <div className="messages-layout">
+      <div className="messages-layout-modern">
         {/* Conversations Sidebar */}
-        <div className="conversations-sidebar">
-          <div className="conversations-header">
+        <div className="conversations-sidebar-modern">
+          <div className="conversations-header-modern">
             <h3>Conversations</h3>
-            <button className="new-chat-btn" onClick={() => setSelectedConversation({ new: true })}>+ New</button>
+            <button className="new-chat-btn-modern" onClick={() => setShowNewChat(true)}>
+              + New
+            </button>
           </div>
           
-          <div className="conversations-list">
+          <div className="conversations-list-modern">
             {conversations.length === 0 ? (
-              <p className="no-conversations">No conversations yet. Start a new chat!</p>
+              <div className="no-conversations-modern">
+                <p>💬 No conversations yet</p>
+                <p className="sub-text">Click "New" to start a chat</p>
+              </div>
             ) : (
               conversations.map(conv => (
                 <div 
                   key={conv.user} 
-                  className={`conversation-item ${selectedConversation?.user === conv.user ? "active" : ""}`}
+                  className={`conversation-item-modern ${selectedConversation?.user === conv.user ? "active" : ""}`}
                   onClick={() => selectConversation(conv)}
                 >
-                  <div className="conv-avatar">
+                  <div className="conv-avatar-modern">
                     {conv.user.charAt(0).toUpperCase()}
                   </div>
-                  <div className="conv-info">
-                    <div className="conv-name">{conv.user}</div>
-                    <div className="conv-preview">{conv.lastMessage?.substring(0, 30)}</div>
+                  <div className="conv-info-modern">
+                    <div className="conv-name-modern">{conv.user}</div>
+                    <div className="conv-preview-modern">
+                      {conv.lastMessage?.substring(0, 35)}{conv.lastMessage?.length > 35 ? '...' : ''}
+                    </div>
                   </div>
-                  {conv.unread && <div className="unread-dot"></div>}
+                  {conv.unread && <div className="unread-dot-modern"></div>}
                 </div>
               ))
             )}
@@ -173,63 +182,90 @@ function Messages() {
         </div>
 
         {/* New Chat Modal */}
-        {selectedConversation?.new && (
-          <div className="new-chat-modal">
-            <div className="modal-header">
-              <h3>Start New Conversation</h3>
-              <button className="close-btn" onClick={() => setSelectedConversation(null)}>✕</button>
-            </div>
-            <input 
-              type="text" 
-              placeholder="Search users by name or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-            <div className="users-list">
-              {filteredUsers.map(user => (
-                <div key={user.email} className="user-item" onClick={() => startNewConversation(user)}>
-                  <div className="user-avatar">{user.firstName?.charAt(0) || user.email.charAt(0)}</div>
-                  <div className="user-info">
-                    <div className="user-name">{user.firstName} {user.lastName}</div>
-                    <div className="user-email">{user.email}</div>
-                    <div className="user-role">{user.role}</div>
-                  </div>
-                </div>
-              ))}
+        {showNewChat && (
+          <div className="modal-overlay-modern" onClick={() => setShowNewChat(false)}>
+            <div className="modal-content-modern" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header-modern">
+                <h3>Start New Conversation</h3>
+                <button className="close-btn-modern" onClick={() => setShowNewChat(false)}>✕</button>
+              </div>
+              <input 
+                type="text" 
+                placeholder="Search users by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input-modern"
+              />
+              <div className="users-list-modern">
+                {filteredUsers.length === 0 ? (
+                  <p className="no-users">No users found</p>
+                ) : (
+                  filteredUsers.map(user => (
+                    <div key={user.email} className="user-item-modern" onClick={() => startNewConversation(user)}>
+                      <div className="user-avatar-modern">
+                        {user.firstName?.charAt(0) || user.email.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="user-info-modern">
+                        <div className="user-name-modern">
+                          {user.firstName} {user.lastName}
+                        </div>
+                        <div className="user-email-modern">{user.email}</div>
+                        <div className="user-role-modern">
+                          {user.role === "student" ? "🎓 Student" : 
+                           user.role === "instructor" ? "👨‍🏫 Instructor" : 
+                           user.role === "employer" ? "🏢 Employer" : "👑 Admin"}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}
 
         {/* Chat Area */}
-        <div className="chat-area">
-          {!selectedConversation || selectedConversation.new ? (
-            <div className="no-chat-selected">
-              <p>Select a conversation or start a new chat</p>
+        <div className="chat-area-modern">
+          {!selectedConversation ? (
+            <div className="no-chat-selected-modern">
+              <div className="chat-placeholder">
+                <span>💬</span>
+                <h3>No conversation selected</h3>
+                <p>Select a conversation from the list or start a new chat</p>
+              </div>
             </div>
           ) : (
             <>
-              <div className="chat-header">
-                <div className="chat-user">
-                  <div className="chat-avatar">{selectedConversation.user.charAt(0).toUpperCase()}</div>
+              <div className="chat-header-modern">
+                <div className="chat-user-modern">
+                  <div className="chat-avatar-modern">
+                    {selectedConversation.user.charAt(0).toUpperCase()}
+                  </div>
                   <div>
-                    <h3>{selectedConversation.user}</h3>
+                    <h3>{selectedConversation.userName || selectedConversation.user}</h3>
                   </div>
                 </div>
               </div>
 
-              <div className="chat-messages">
-                {getConversationMessages().map(msg => (
-                  <div key={msg.id} className={`message ${msg.from === currentUser ? "sent" : "received"}`}>
-                    <div className="message-bubble">
-                      <p>{msg.message}</p>
-                      <span className="message-time">{formatTime(msg.timestamp)}</span>
-                    </div>
+              <div className="chat-messages-modern">
+                {getConversationMessages().length === 0 ? (
+                  <div className="no-messages">
+                    <p>No messages yet</p>
+                    <p>Send a message to start the conversation</p>
                   </div>
-                ))}
+                ) : (
+                  getConversationMessages().map(msg => (
+                    <div key={msg.id} className={`message-modern ${msg.from === currentUser ? "sent" : "received"}`}>
+                      <div className="message-bubble-modern">
+                        <p>{msg.message}</p>
+                        <span className="message-time-modern">{formatTime(msg.timestamp)}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
 
-              <div className="chat-input-area">
+              <div className="chat-input-area-modern">
                 <input
                   type="text"
                   placeholder="Type a message..."
