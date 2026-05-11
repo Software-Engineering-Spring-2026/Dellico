@@ -10,6 +10,14 @@ function ProjectDetails() {
   
   const role = localStorage.getItem("role");
   const currentUser = localStorage.getItem("currentUserEmail");
+  <button className="danger-btn" onClick={() => setShowFlagModal(true)}>
+  🚩 Flag as Inappropriate
+</button>
+{showFlagModal && (
+  <div className="modal-overlay">
+    {/* flag form */}
+  </div>
+)}
 
   useEffect(() => {
     // Load selected project from localStorage

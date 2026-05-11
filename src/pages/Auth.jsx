@@ -64,91 +64,70 @@ function Auth() {
   }
 
   function registerAccount() {
-  setError("");
-  setMessage("");
+    setError("");
+    setMessage("");
 
-  if (!register.email || !register.password) {
-    setError("Please enter email and password.");
-    return;
-  }
+    if (!register.email || !register.password) {
+      setError("Please enter email and password.");
+      return;
+    }
 
-  if (!isStrongPassword(register.password)) {
-    setError("Password must be at least 8 characters and include a special character.");
-    return;
-  }
+    if (!isStrongPassword(register.password)) {
+      setError("Password must be at least 8 characters and include a special character.");
+      return;
+    }
 
-  if (registerRole === "student" && !register.email.endsWith("@student.guc.edu.eg")) {
-    setError("Student email must be like example@student.guc.edu.eg");
-    return;
-  }
+    if (registerRole === "student" && !register.email.endsWith("@student.guc.edu.eg")) {
+      setError("Student email must be like example@student.guc.edu.eg");
+      return;
+    }
 
-  if (registerRole === "instructor" && !register.email.endsWith("@guc.edu.eg")) {
-    setError("Course instructor email must be like example@guc.edu.eg");
-    return;
-  }
+    if (registerRole === "instructor" && !register.email.endsWith("@guc.edu.eg")) {
+      setError("Course instructor email must be like example@guc.edu.eg");
+      return;
+    }
 
-  if (
-    registerRole === "employer" &&
-    !(
-      register.email.endsWith("@gmail.com") ||
-      register.email.endsWith("@hotmail.com") ||
-      register.email.endsWith("@yahoo.com")
-    )
-  ) {
-    setError("Employer email must be Gmail, Hotmail, or Yahoo.");
-    return;
-  }
+    if (
+      registerRole === "employer" &&
+      !(
+        register.email.endsWith("@gmail.com") ||
+        register.email.endsWith("@hotmail.com") ||
+        register.email.endsWith("@yahoo.com")
+      )
+    ) {
+      setError("Employer email must be Gmail, Hotmail, or Yahoo.");
+      return;
+    }
 
-  if (registerRole === "employer" && !register.document) {
-    setError("Employer must upload PDF verification document.");
-    return;
-  }
+    if (registerRole === "employer" && !register.document) {
+      setError("Employer must upload PDF verification document.");
+      return;
+    }
 
-  const users = getUsers();
+    const users = getUsers();
 
-  if (users.some((u) => u.email === register.email)) {
-    setError("This email is already registered.");
-    return;
-  }
+    if (users.some((u) => u.email === register.email)) {
+      setError("This email is already registered.");
+      return;
+    }
 
-  // ✅ ADD THIS PART - Store the actual file for employers
-  if (registerRole === "employer" && register.document) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const fileContent = e.target.result;
-      
-      // Store file in uploadedDocuments
-      const uploadedFiles = JSON.parse(localStorage.getItem("uploadedDocuments")) || {};
-      uploadedFiles[`${register.email}_${register.document.name}`] = {
-        name: register.document.name,
-        content: fileContent,
-        type: register.document.type,
-        uploadedAt: new Date().toISOString()
-      };
-      localStorage.setItem("uploadedDocuments", JSON.stringify(uploadedFiles));
+    const newUser = {
+      firstName: register.firstName,
+      lastName: register.lastName,
+      companyName: register.companyName,
+      email: register.email,
+      password: register.password,
+      role: registerRole,
+      documentName: register.document?.name || "",
+      verificationStatus: registerRole === "employer" ? "Pending" : "Accepted",
     };
-    reader.readAsDataURL(register.document);
+
+    saveUsers([...users, newUser]);
+    localStorage.setItem("registeredUser", JSON.stringify(newUser));
+
+    setMessage("Account registered successfully. You can now login.");
+    setMode("login");
   }
-
-  // Create the new user object
-  const newUser = {
-    firstName: register.firstName,
-    lastName: register.lastName,
-    companyName: register.companyName,
-    email: register.email,
-    password: register.password,
-    role: registerRole,
-    documentName: register.document?.name || "",
-    documentType: register.document?.type || "",
-    verificationStatus: registerRole === "employer" ? "Pending" : "Accepted",
-  };
-
-  saveUsers([...users, newUser]);
-  localStorage.setItem("registeredUser", JSON.stringify(newUser));
-
-  setMessage("Account registered successfully. You can now login.");
-  setMode("login");
-}
 
   function handleLogin() {
     setError("");
@@ -218,131 +197,161 @@ function Auth() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-wrapper">
-        <div className="auth-card">
-          <h1>Welcome to Dellico</h1>
-          <p>GUC Project Portfolio Platform</p>
+    <div className="auth-page-modern">
+      <div className="auth-container">
+        <div className="auth-card-modern">
+          <div className="auth-logo">
+            <h1>Dellico</h1>
+            <p>GUC Project Portfolio Platform</p>
+          </div>
 
           {mode === "login" && (
-            <>
-              <h2>Login</h2>
+            <div className="auth-form-modern">
+              <h2>Welcome Back</h2>
+              <p className="auth-subtitle">Login to access your dashboard</p>
+
               <input
-                placeholder="Email"
+                type="email"
+                placeholder="Email Address"
                 value={login.email}
                 onChange={(e) => setLogin({ ...login, email: e.target.value })}
               />
+
               <input
                 type="password"
                 placeholder="Password"
                 value={login.password}
                 onChange={(e) => setLogin({ ...login, password: e.target.value })}
               />
-              <button className="primary" onClick={handleLogin}>
+
+              <button className="auth-btn-primary" onClick={handleLogin}>
                 Login
               </button>
-              <button className="link-btn" onClick={() => setMode("forgot")}>
+
+              <button className="auth-link-btn" onClick={() => setMode("forgot")}>
                 Forgot your password?
               </button>
-              <p className="auth-switch">Don't have an account?</p>
-              <button className="secondary-btn" onClick={() => setMode("register")}>
-                Register
+
+              <div className="auth-divider">
+                <span>Don't have an account?</span>
+              </div>
+
+              <button className="auth-btn-secondary" onClick={() => setMode("register")}>
+                Create New Account
               </button>
-            </>
+            </div>
           )}
 
           {mode === "register" && (
-            <>
-              <h2>Register</h2>
-              <div className="auth-role-buttons">
+            <div className="auth-form-modern">
+              <h2>Create Account</h2>
+              <p className="auth-subtitle">Join Dellico platform</p>
+
+              <div className="auth-role-buttons-modern">
                 <button
-                  className={registerRole === "student" ? "primary" : "secondary-btn"}
+                  className={registerRole === "student" ? "role-active" : "role-btn"}
                   onClick={() => setRegisterRole("student")}
                 >
-                  Student
+                  🎓 Student
                 </button>
                 <button
-                  className={registerRole === "instructor" ? "primary" : "secondary-btn"}
+                  className={registerRole === "instructor" ? "role-active" : "role-btn"}
                   onClick={() => setRegisterRole("instructor")}
                 >
-                  Course Instructor
+                  👨‍🏫 Instructor
                 </button>
                 <button
-                  className={registerRole === "employer" ? "primary" : "secondary-btn"}
+                  className={registerRole === "employer" ? "role-active" : "role-btn"}
                   onClick={() => setRegisterRole("employer")}
                 >
-                  Employer
+                  🏢 Employer
                 </button>
               </div>
 
               {registerRole !== "employer" ? (
                 <>
-                  <input name="firstName" placeholder="First name" onChange={handleRegisterChange} />
-                  <input name="lastName" placeholder="Last name" onChange={handleRegisterChange} />
+                  <div className="form-row-modern">
+                    <input name="firstName" placeholder="First Name" onChange={handleRegisterChange} />
+                    <input name="lastName" placeholder="Last Name" onChange={handleRegisterChange} />
+                  </div>
                   <input
                     name="email"
-                    placeholder={registerRole === "student" ? "example@student.guc.edu.eg" : "example@guc.edu.eg"}
+                    placeholder={registerRole === "student" ? "student@student.guc.edu.eg" : "name@guc.edu.eg"}
                     onChange={handleRegisterChange}
                   />
                   <input
                     name="password"
                     type="password"
-                    placeholder="Password"
+                    placeholder="Password (min 8 chars + special character)"
                     onChange={handleRegisterChange}
                   />
                 </>
               ) : (
                 <>
-                  <input name="companyName" placeholder="Company name" onChange={handleRegisterChange} />
-                  <input name="email" placeholder="example@gmail.com" onChange={handleRegisterChange} />
+                  <input name="companyName" placeholder="Company Name" onChange={handleRegisterChange} />
+                  <input name="email" placeholder="company@gmail.com" onChange={handleRegisterChange} />
                   <input name="password" type="password" placeholder="Password" onChange={handleRegisterChange} />
-                  <label>Upload PDF verification document</label>
-                  <input name="document" type="file" accept="application/pdf" onChange={handleRegisterChange} />
+                  <div className="file-upload-modern">
+                    <label>Verification Document (PDF)</label>
+                    <input name="document" type="file" accept="application/pdf" onChange={handleRegisterChange} />
+                  </div>
                 </>
               )}
 
-              <button className="primary" onClick={registerAccount}>
+              <button className="auth-btn-primary" onClick={registerAccount}>
                 Register
               </button>
-              <button className="link-btn" onClick={() => setMode("login")}>
-                Already have an account? Login
+
+              <div className="auth-divider">
+                <span>Already have an account?</span>
+              </div>
+
+              <button className="auth-btn-secondary" onClick={() => setMode("login")}>
+                Back to Login
               </button>
-            </>
+            </div>
           )}
 
           {mode === "forgot" && (
-            <>
-              <h2>Forgot Password</h2>
+            <div className="auth-form-modern">
+              <h2>Reset Password</h2>
+              <p className="auth-subtitle">We'll send you an OTP to reset your password</p>
+
               <input
-                placeholder="Enter registered email"
+                placeholder="Enter your registered email"
                 value={reset.email}
                 onChange={(e) => setReset({ ...reset, email: e.target.value })}
               />
-              <button className="secondary-btn" onClick={sendOtp}>
+
+              <button className="auth-btn-secondary" onClick={sendOtp}>
                 Send OTP
               </button>
+
               <input
                 placeholder="Enter OTP"
                 value={reset.otp}
                 onChange={(e) => setReset({ ...reset, otp: e.target.value })}
               />
+
               <input
                 type="password"
                 placeholder="New password"
                 value={reset.newPassword}
                 onChange={(e) => setReset({ ...reset, newPassword: e.target.value })}
               />
-              <button className="primary" onClick={resetPassword}>
+
+              <button className="auth-btn-primary" onClick={resetPassword}>
                 Update Password
               </button>
-              <button className="link-btn" onClick={() => setMode("login")}>
+
+              <button className="auth-link-btn" onClick={() => setMode("login")}>
                 Back to Login
               </button>
-            </>
+            </div>
           )}
 
-          {error && <p className="error-text">{error}</p>}
-          {message && <p className="success-text">{message}</p>}
+          {error && <div className="auth-error">{error}</div>}
+          {message && <div className="auth-success">{message}</div>}
         </div>
       </div>
     </div>

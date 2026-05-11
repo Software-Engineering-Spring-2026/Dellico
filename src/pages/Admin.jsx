@@ -153,26 +153,28 @@ function Admin() {
   }
 
   function verifyCompany(companyEmail, status) {
-    const updatedUsers = users.map(user => {
-      if (user.email === companyEmail) {
-        return { ...user, verificationStatus: status };
-      }
-      return user;
-    });
-    saveUsers(updatedUsers);
-    setSelectedCompany(null);
-    setMessage(`Company ${status} successfully`);
-    
-    const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
-    notifications.push({
-      id: Date.now(),
-      to: companyEmail,
-      message: `Your company application has been ${status}`,
-      read: false,
-      createdAt: new Date().toISOString()
-    });
-    localStorage.setItem("notifications", JSON.stringify(notifications));
-  }
+  const updatedUsers = users.map(user => {
+    if (user.email === companyEmail) {
+      return { ...user, verificationStatus: status };
+    }
+    return user;
+  });
+  saveUsers(updatedUsers);
+  setSelectedCompany(null);
+  setMessage(`Company ${status} successfully`);
+  
+  // ✅ Only ONE declaration - remove the duplicate
+  const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+  notifications.push({
+    id: Date.now(),
+    to: companyEmail,
+    message: `Your company application has been ${status}`,
+    read: false,
+    createdAt: new Date().toISOString(),
+    type: "company_verification"
+  });
+  localStorage.setItem("notifications", JSON.stringify(notifications));
+}
 
   // Req 57-58: Handle linking requests
   function handleLinkingRequest(request, action) {

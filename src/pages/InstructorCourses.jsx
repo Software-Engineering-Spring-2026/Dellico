@@ -56,16 +56,17 @@ function InstructorCourses() {
     localStorage.setItem("linkingRequests", JSON.stringify(existingRequests));
     
     // Req 58: Admin receives notification
-    const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
-    notifications.push({
-      id: Date.now(),
-      to: "admin@guc.edu.eg",
-      message: `📚 Course linking request from ${currentUser} for "${course}"`,
-      read: false,
-      createdAt: new Date().toISOString(),
-      type: "linking_request"
-    });
-    localStorage.setItem("notifications", JSON.stringify(notifications));
+    // Notify admin
+const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+notifications.push({
+  id: Date.now(),
+  to: "admin@guc.edu.eg",
+  message: `${currentUser} requested to ${type} course "${courseName}"`,
+  read: false,
+  createdAt: new Date().toISOString(),
+  type: "linking_request"
+});
+localStorage.setItem("notifications", JSON.stringify(notifications));
 
     setMessage(`Linking request sent to admin for course "${course}". Waiting for approval.`);
     setCourse("");
@@ -103,16 +104,17 @@ function InstructorCourses() {
     localStorage.setItem("linkingRequests", JSON.stringify(existingRequests));
     
     // Notify admin
-    const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
-    notifications.push({
-      id: Date.now(),
-      to: "admin@guc.edu.eg",
-      message: `🔗 Course unlinking request from ${currentUser} for "${selectedCourse}"`,
-      read: false,
-      createdAt: new Date().toISOString(),
-      type: "linking_request"
-    });
-    localStorage.setItem("notifications", JSON.stringify(notifications));
+    // Notify admin
+const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+notifications.push({
+  id: Date.now(),
+  to: "admin@guc.edu.eg",
+  message: `${currentUser} requested to ${type} course "${courseName}"`,
+  read: false,
+  createdAt: new Date().toISOString(),
+  type: "linking_request"
+});
+localStorage.setItem("notifications", JSON.stringify(notifications));
 
     setMessage(`Unlinking request sent to admin for course "${selectedCourse}".`);
     

@@ -98,16 +98,25 @@ function ProjectCollaborators() {
     
     // Req 28: Send notification to invitee (notification system)
     const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
-    notifications.push({
-      id: Date.now(),
-      to: invitee.email,
-      message: `${currentUser} invited you to collaborate on project "${project.title}"`,
-      read: false,
-      createdAt: new Date().toISOString(),
-      type: "invitation",
-      invitationId: newInvitation.id
-    });
-    localStorage.setItem("notifications", JSON.stringify(notifications));
+notifications.push({
+  id: Date.now(),
+  to: invitee.email,
+  message: `${currentUser} invited you to collaborate on project "${project.title}"`,
+  read: false,
+  createdAt: new Date().toISOString(),
+  type: "invitation",
+  invitationId: newInvitation.id
+});
+localStorage.setItem("notifications", JSON.stringify(notifications));
+// In acceptInvitation function
+notifications.push({
+  id: Date.now(),
+  to: invitation.inviterEmail,
+  message: `${currentUser} accepted your invitation to collaborate on "${invitation.projectTitle}"`,
+  read: false,
+  createdAt: new Date().toISOString(),
+  type: "invitation"
+});
 
     setMessage(`Invitation sent to ${invitee.email}`);
     loadInvitations();

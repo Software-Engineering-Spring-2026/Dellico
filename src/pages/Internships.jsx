@@ -1,203 +1,238 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function Internships() {
-  const [showResults, setShowResults] = useState(false);
-  const [selected, setSelected] = useState(null);
+  const [internships, setInternships] = useState([]);
+  const [filteredInternships, setFilteredInternships] = useState([]);
+  const [selectedInternship, setSelectedInternship] = useState(null);
+  const [coverLetter, setCoverLetter] = useState("");
   const [message, setMessage] = useState("");
-  const [applicationMessage, setApplicationMessage] = useState("");
+  const [myApplications, setMyApplications] = useState([]);
+  
+  // Filters
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCompany, setFilterCompany] = useState("");
+  const [filterDuration, setFilterDuration] = useState("");
+  const [sortBy, setSortBy] = useState("date_desc");
+  
+  const currentUser = localStorage.getItem("currentUserEmail");
 
-  const [filters, setFilters] = useState({
-    search: "",
-    company: "",
-    duration: "",
-    sort: "",
-    coverLetter: "",
-  });
+  useEffect(() => {
+    loadInternships();
+    loadMyApplications();
+  }, []);
 
-  const internships = [
-    {
-      id: 1,
-      title: "Frontend React Intern",
-      company: "Dell",
-      duration: "3 months",
-      responsibilities: "Build UI components and dashboards.",
-      skills: "React, CSS, Git",
-      deadline: "30 May",
-      date: "2026-05-01",
-    },
-    {
-      id: 2,
-      title: "Data Analyst Intern",
-      company: "CIB",
-      duration: "2 months",
-      responsibilities: "Analyze financial data and dashboards.",
-      skills: "Excel, SQL, Power BI",
-      deadline: "25 May",
-      date: "2026-04-20",
-    },
-  ];
+  useEffect(() => {
+    applyFilters();
+  }, [searchTerm, filterCompany, filterDuration, sortBy, internships]);
 
-  function handleChange(e) {
-    setFilters({
-      ...filters,
-      [e.target.name]: e.target.value,
+  function loadInternships() {
+    const allInternships = JSON.parse(localStorage.getItem("internships")) || [];
+    const activeInternships = allInternships.filter(i => i.status === "hiring" && !i.archived);
+    setInternships(activeInternships);
+  }
+
+  function loadMyApplications() {
+    const applications = JSON.parse(localStorage.getItem("internshipApplications")) || {};
+    const myApps = applications[currentUser] || [];
+    setMyApplications(myApps);
+  }
+
+  function applyFilters() {
+    let results = [...internships];
+
+    if (searchTerm) {
+      results = results.filter(i => 
+        i.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        i.companyName?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (filterCompany) {
+      results = results.filter(i => i.companyEmail === filterCompany);
+    }
+
+    if (filterDuration) {
+      results = results.filter(i => i.duration === filterDuration);
+    }
+
+    results.sort((a, b) => {
+      switch(sortBy) {
+        case "date_desc":
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        case "date_asc":
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        default:
+          return 0;
+      }
     });
-  }
 
-  function handleSearch() {
-    setShowResults(true);
-    setSelected(null);
-    setApplicationMessage("");
-  }
-
-  let filteredInternships = internships.filter((job) => {
-    const matchesSearch =
-      !filters.search ||
-      job.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-      job.company.toLowerCase().includes(filters.search.toLowerCase());
-
-    const matchesCompany = !filters.company || job.company === filters.company;
-    const matchesDuration =
-      !filters.duration || job.duration === filters.duration;
-
-    return matchesSearch && matchesCompany && matchesDuration;
-  });
-
-  if (filters.sort === "Newest first") {
-    filteredInternships = [...filteredInternships].sort(
-      (a, b) => new Date(b.date) - new Date(a.date)
-    );
-  }
-
-  if (filters.sort === "Oldest first") {
-    filteredInternships = [...filteredInternships].sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
+    setFilteredInternships(results);
   }
 
   function applyForInternship() {
-    if (!filters.coverLetter.trim()) {
-      setApplicationMessage("Please write a short cover letter before applying.");
+    if (!coverLetter.trim()) {
+      setMessage("Please write a cover letter explaining why you fit this role");
       return;
     }
 
-    setApplicationMessage(
-      `Application submitted for ${selected.title}. Status: Applied.`
-    );
+    const applications = JSON.parse(localStorage.getItem("internshipApplications")) || {};
+    if (!applications[currentUser]) applications[currentUser] = [];
+    
+    const alreadyApplied = applications[currentUser].some(a => a.internshipId === selectedInternship.id);
+    if (alreadyApplied) {
+      setMessage("You have already applied for this internship");
+      return;
+    }
+
+    applications[currentUser].push({
+      internshipId: selectedInternship.id,
+      title: selectedInternship.title,
+      companyName: selectedInternship.companyEmail,
+      companyEmail: selectedInternship.companyEmail,
+      coverLetter: coverLetter,
+      appliedAt: new Date().toISOString(),
+      status: "pending"
+    });
+    
+    localStorage.setItem("internshipApplications", JSON.stringify(applications));
+    
+    // Notify employer
+    const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+    notifications.push({
+      id: Date.now(),
+      to: selectedInternship.companyEmail,
+      message: `New application received for "${selectedInternship.title}" from ${currentUser}`,
+      read: false,
+      createdAt: new Date().toISOString(),
+      type: "internship_application"
+    });
+    localStorage.setItem("notifications", JSON.stringify(notifications));
+    
+    setMessage("Application submitted successfully!");
+    setCoverLetter("");
+    setSelectedInternship(null);
+    loadMyApplications();
+    setTimeout(() => setMessage(""), 3000);
   }
 
+  function getDurationOptions() {
+    const durations = [...new Set(internships.map(i => i.duration).filter(d => d))];
+    return durations;
+  }
+
+  function getCompanyOptions() {
+    const companies = [...new Set(internships.map(i => i.companyEmail))];
+    return companies;
+  }
+
+  const hasApplied = (internshipId) => {
+    return myApplications.some(a => a.internshipId === internshipId);
+  };
+
+  const getApplicationStatus = (internshipId) => {
+    const app = myApplications.find(a => a.internshipId === internshipId);
+    return app?.status;
+  };
+
   return (
-    <div className="project-form-card">
-      <h2>Student Internships</h2>
-      <p>Search, filter, view, select, and apply for internships.</p>
+    <div className="internships-container">
+      <h1>Internship Opportunities</h1>
+      
+      {/* Search and Filters */}
+      <div className="filter-section">
+        <input
+          type="text"
+          placeholder="Search by internship title or company..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+        
+        <div className="filter-row">
+          <select value={filterCompany} onChange={(e) => setFilterCompany(e.target.value)}>
+            <option value="">All Companies</option>
+            {getCompanyOptions().map(company => (
+              <option key={company} value={company}>{company}</option>
+            ))}
+          </select>
+          
+          <select value={filterDuration} onChange={(e) => setFilterDuration(e.target.value)}>
+            <option value="">All Durations</option>
+            {getDurationOptions().map(duration => (
+              <option key={duration} value={duration}>{duration}</option>
+            ))}
+          </select>
+          
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option value="date_desc">Newest First</option>
+            <option value="date_asc">Oldest First</option>
+          </select>
+        </div>
+      </div>
 
-      <label>Search by Internship Title or Company Name</label>
-      <input
-        name="search"
-        value={filters.search}
-        onChange={handleChange}
-        placeholder="Example: React or Dell"
-      />
+      {/* Results Count */}
+      <div className="results-count">
+        Found {filteredInternships.length} internships
+      </div>
 
-      <label>Filter by Company Name</label>
-      <select name="company" value={filters.company} onChange={handleChange}>
-        <option value="">All companies</option>
-        <option>Dell</option>
-        <option>CIB</option>
-      </select>
-
-      <label>Filter by Duration</label>
-      <select name="duration" value={filters.duration} onChange={handleChange}>
-        <option value="">All durations</option>
-        <option>2 months</option>
-        <option>3 months</option>
-      </select>
-
-      <label>Sort by Posting Date</label>
-      <select name="sort" value={filters.sort} onChange={handleChange}>
-        <option value="">Default order</option>
-        <option>Newest first</option>
-        <option>Oldest first</option>
-      </select>
-
-      <button className="primary" type="button" onClick={handleSearch}>
-        Search Internships
-      </button>
-
-      {message && <p className="error-text">{message}</p>}
-
-      {showResults && (
-        <section className="profile-section">
-          <h3>Internship Results Based on Search / Filtration</h3>
-
-          {filteredInternships.length === 0 ? (
-            <p>No internships found.</p>
-          ) : (
-            filteredInternships.map((job) => (
-              <div className="list-card" key={job.id}>
-                <h4>{job.title}</h4>
-                <p>
-                  <strong>Company:</strong> {job.company}
-                </p>
-                <p>
-                  <strong>Duration:</strong> {job.duration}
-                </p>
-
-                <button
-                  className="secondary-btn"
-                  type="button"
-                  onClick={() => {
-                    setSelected(job);
-                    setApplicationMessage("");
-                  }}
-                >
-                  Select Internship
-                </button>
+      {/* Internships List */}
+      <div className="internships-grid">
+        {filteredInternships.map(internship => (
+          <div key={internship.id} className="internship-card-student">
+            <h3>{internship.title}</h3>
+            <p className="company">{internship.companyEmail}</p>
+            <div className="internship-details">
+              <span>📅 {internship.duration || "Not specified"}</span>
+              <span>⏰ Deadline: {new Date(internship.deadline).toLocaleDateString()}</span>
+            </div>
+            <p className="skills">💻 {internship.skills || "No skills specified"}</p>
+            <p className="description">{internship.details?.substring(0, 100)}...</p>
+            
+            {hasApplied(internship.id) ? (
+              <div className="applied-status">
+                <span className={`status-${getApplicationStatus(internship.id)}`}>
+                  {getApplicationStatus(internship.id) === "pending" && "⏳ Application Pending"}
+                  {getApplicationStatus(internship.id) === "nominated" && "⭐ Nominated"}
+                  {getApplicationStatus(internship.id) === "accepted" && "✅ Accepted"}
+                  {getApplicationStatus(internship.id) === "rejected" && "❌ Not Selected"}
+                </span>
               </div>
-            ))
-          )}
-        </section>
-      )}
+            ) : (
+              <button className="primary" onClick={() => setSelectedInternship(internship)}>
+                Apply Now
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
 
-      {selected && (
-        <section className="profile-section">
-          <h3>Selected Internship Details</h3>
-
-          <p>
-            <strong>Title:</strong> {selected.title}
-          </p>
-          <p>
-            <strong>Company:</strong> {selected.company}
-          </p>
-          <p>
-            <strong>Duration:</strong> {selected.duration}
-          </p>
-          <p>
-            <strong>Responsibilities:</strong> {selected.responsibilities}
-          </p>
-          <p>
-            <strong>Skills:</strong> {selected.skills}
-          </p>
-          <p>
-            <strong>Deadline:</strong> {selected.deadline}
-          </p>
-
-          <label>Short Cover Letter</label>
-          <textarea
-            name="coverLetter"
-            value={filters.coverLetter}
-            onChange={handleChange}
-            placeholder="Write a short cover letter explaining why you fit this internship"
-          />
-
-          <button className="primary" type="button" onClick={applyForInternship}>
-            Apply for Internship
-          </button>
-
-          {applicationMessage && (
-            <p className="success-text">{applicationMessage}</p>
-          )}
-        </section>
+      {/* Application Modal */}
+      {selectedInternship && (
+        <div className="modal-overlay" onClick={() => setSelectedInternship(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Apply for {selectedInternship.title}</h2>
+            <p><strong>Company:</strong> {selectedInternship.companyEmail}</p>
+            <p><strong>Duration:</strong> {selectedInternship.duration}</p>
+            <p><strong>Skills Required:</strong> {selectedInternship.skills}</p>
+            <p><strong>Responsibilities:</strong></p>
+            <p>{selectedInternship.details}</p>
+            
+            <label>Cover Letter</label>
+            <textarea
+              placeholder="Write a short cover letter explaining why you fit this role..."
+              value={coverLetter}
+              onChange={(e) => setCoverLetter(e.target.value)}
+              rows="6"
+            />
+            
+            {message && <p className="error-text">{message}</p>}
+            
+            <div className="button-row">
+              <button className="primary" onClick={applyForInternship}>Submit Application</button>
+              <button className="secondary-btn" onClick={() => setSelectedInternship(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

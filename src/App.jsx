@@ -27,6 +27,11 @@ import InstructorInvitations from "./pages/InstructorInvitations";
 import InstructorFeedback from "./pages/InstructorFeedback";
 import StudentInstructorFeedback from "./pages/StudentInstructorFeedback";
 import MyProjects from "./pages/MyProjects";
+import ManageInternships from "./pages/ManageInternships";
+import RecommendedProjects from "./pages/RecommendedProjects";
+import StudentStatistics from "./pages/StudentStatistics";
+import EmployerStatistics from "./pages/EmployerStatistics";
+
 function Dashboard() {
   return (
     <div className="page-card">
@@ -64,6 +69,12 @@ function App() {
 <Route path="/instructor-invitations" element={<Layout><InstructorInvitations /></Layout>} />
 <Route path="/instructor-feedback" element={<Layout><InstructorFeedback /></Layout>} />
 <Route path="/student-feedback" element={<Layout><StudentInstructorFeedback /></Layout>} />
+<Route path="/manage-internships" element={<Layout><ManageInternships /></Layout>} />
+<Route path="/recommended" element={<Layout><RecommendedProjects /></Layout>} />
+<Route path="/messages" element={<Layout><Messages /></Layout>} />
+<Route path="/student-statistics" element={<Layout><StudentStatistics /></Layout>} />
+<Route path="/employer-statistics" element={<Layout><EmployerStatistics /></Layout>} />
+
 <Route path="/my-projects" element={
   <Layout>
     <MyProjects />
