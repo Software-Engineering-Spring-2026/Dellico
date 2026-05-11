@@ -7,30 +7,32 @@ function Sidebar() {
 
   const menus = {
     student: [
-      { path: "/student-profile", label: "My Portfolio", icon: "👩‍🎓" },
-      { path: "/profile", label: "Search Instructors", icon: "👨‍🏫" },
-      { path: "/internships", label: "Internships", icon: "💼" },
-      { path: "/settings", label: "Settings", icon: "⚙️" },
-      {
-        label: "Projects",
-        icon: "📁",
-        children: [
-          { path: "/create", label: "Create Project" },
-          { path: "/student-workspace", label: "Project Tasks" },
-          { path: "/project-details", label: "Project Details" },
-        ],
-      },
-      { path: "/student-feedback", label: "Instructor Feedback", icon: "⭐" },
-    ],
+  { path: "/student-profile", label: "My Portfolio", icon: "👩‍🎓" },
+  { path: "/profile", label: "Search Instructors", icon: "👨‍🏫" },
+  { path: "/internships", label: "Internships", icon: "💼" },
+  { path: "/project-collaborators", label: "Collaborators", icon: "👥" },  // ← ADD THIS
+  { path: "/settings", label: "Settings", icon: "⚙️" },
+  {
+  label: "Projects",
+  icon: "📁",
+  children: [
+    { path: "/my-projects", label: "My Projects" },  // Changed from Create Project
+    { path: "/create", label: "Create New Project" },
+    { path: "/student-workspace", label: "Project Tasks" },
+  ],
+},
+  { path: "/student-feedback", label: "Instructor Feedback", icon: "⭐" },
+],
 
     instructor: [
-      { path: "/instructor-profile", label: "My Profile", icon: "👨‍🏫" },
-      { path: "/instructor-courses", label: "My Courses", icon: "📚" },
-      { path: "/instructor-invitations", label: "Invitations", icon: "📩" },
-      { path: "/instructor-feedback", label: "Feedback", icon: "⭐" },
-      { path: "/profile", label: "Search Instructors", icon: "🔎" },
-      { path: "/settings", label: "Settings", icon: "⚙️" },
-    ],
+  { path: "/instructor-profile", label: "My Profile", icon: "👨‍🏫" },
+  { path: "/instructor-courses", label: "My Courses", icon: "📚" },
+  { path: "/instructor-invitations", label: "Invitations", icon: "📩" },
+  { path: "/project-collaborators", label: "Collaborators", icon: "👥" },  // ← ADD THIS
+  { path: "/instructor-feedback", label: "Feedback", icon: "⭐" },
+  { path: "/profile", label: "Search Instructors", icon: "🔎" },
+  { path: "/settings", label: "Settings", icon: "⚙️" },
+],
 
     employer: [
       { path: "/employer-profile", label: "Company Profile", icon: "🏢" },

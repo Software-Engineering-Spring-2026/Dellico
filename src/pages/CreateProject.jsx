@@ -92,55 +92,81 @@ function CreateProject() {
     });
   }
 
-  function handleSubmit() {
-    const newErrors = {};
+ function handleSubmit() {
+  const newErrors = {};
 
-    if (!project.title.trim()) newErrors.title = "Please enter project title.";
-    if (!project.course) newErrors.course = "Please select a course.";
-    if (!project.github || !isValidURL(project.github)) {
-      newErrors.github = "Please write GitHub link in correct URL format.";
-    }
-    if (!project.programmingLanguages.trim()) {
-      newErrors.programmingLanguages = "Please enter the programming languages used.";
-    }
-    if (!project.report.trim()) newErrors.report = "Please write the project report.";
-    if (!project.demo || !isValidURL(project.demo)) {
-      newErrors.demo = "Please write short demo video link in correct URL format.";
-    }
-    if (!project.supervisor) newErrors.supervisor = "Please select a supervisor.";
-    if (!project.collaborator || !isValidEmail(project.collaborator)) {
-      newErrors.collaborator = "Please write collaborator email in correct format.";
-    }
-    if (project.tasks.length === 0) {
-      newErrors.task = "Please add at least one project task.";
-    }
-    if (project.course === "Bachelor Project" && project.thesisDrafts.length === 0) {
-      newErrors.thesisDrafts = "Please upload at least one thesis draft for Bachelor Project.";
-    }
-    if (project.course === "Bachelor Project" && !project.finalDraft) {
-      newErrors.finalDraft = "Please select one thesis draft as the final draft.";
-    }
-
-    setErrors(newErrors);
-
-    if (Object.keys(newErrors).length === 0) {
-        const allProjects = JSON.parse(localStorage.getItem("allProjects")) || [];
-const newProject = {
-  ...project,
-  id: Date.now(),
-  studentEmail: localStorage.getItem("currentUserEmail") || "student@student.guc.edu.eg",
-  createdAt: new Date().toISOString()
-};
-allProjects.push(newProject);
-localStorage.setItem("allProjects", JSON.stringify(allProjects));
-      localStorage.setItem("createdProject", JSON.stringify(project));
-      setSuccess(true);
-
-      setTimeout(() => {
-        navigate("/project-details");
-      }, 800);
-    }
+  if (!project.title.trim()) newErrors.title = "Please enter project title.";
+  if (!project.course) newErrors.course = "Please select a course.";
+  if (!project.github || !isValidURL(project.github)) {
+    newErrors.github = "Please write GitHub link in correct URL format.";
   }
+  if (!project.programmingLanguages.trim()) {
+    newErrors.programmingLanguages = "Please enter the programming languages used.";
+  }
+  if (!project.report.trim()) newErrors.report = "Please write the project report.";
+  if (!project.demo || !isValidURL(project.demo)) {
+    newErrors.demo = "Please write short demo video link in correct URL format.";
+  }
+  if (project.tasks.length === 0) {
+    newErrors.task = "Please add at least one project task.";
+  }
+  if (project.course === "Bachelor Project" && project.thesisDrafts.length === 0) {
+    newErrors.thesisDrafts = "Please upload at least one thesis draft for Bachelor Project.";
+  }
+
+  setErrors(newErrors);
+
+  if (Object.keys(newErrors).length === 0) {
+    // Get existing projects
+    const allProjects = JSON.parse(localStorage.getItem("allProjects")) || [];
+    
+    // Create new project with unique ID
+    const newProject = {
+      ...project,
+      id: Date.now(),
+      studentEmail: localStorage.getItem("currentUserEmail"),
+      createdAt: new Date().toISOString(),
+      visibility: project.visibility || "Private"
+    };
+    
+    // Add to existing projects
+    allProjects.push(newProject);
+    localStorage.setItem("allProjects", JSON.stringify(allProjects));
+    
+    // Also store as current project for details view
+    localStorage.setItem("createdProject", JSON.stringify(newProject));
+    
+    setSuccess(true);
+    
+    // Reset form
+    setProject({
+      title: "",
+      course: "",
+      github: "",
+      programmingLanguages: "",
+      report: "",
+      demo: "",
+      thesisDrafts: [],
+      finalDraft: "",
+      supervisor: "",
+      collaborator: "",
+      role: "Viewer",
+      visibility: "Private",
+      creationDate: new Date().toLocaleDateString(),
+      tasks: [],
+    });
+    setTask({
+      name: "",
+      details: "",
+      status: "Pending",
+    });
+    setErrors({});
+    
+    setTimeout(() => {
+      navigate("/student-profile");
+    }, 1500);
+  }
+}
 
   return (
     <div className="project-form-card">

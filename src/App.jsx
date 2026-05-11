@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import "./App.css";
+import ProjectCollaborators from "./pages/ProjectCollaborators";
 
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -25,6 +26,7 @@ import InstructorCourses from "./pages/InstructorCourses";
 import InstructorInvitations from "./pages/InstructorInvitations";
 import InstructorFeedback from "./pages/InstructorFeedback";
 import StudentInstructorFeedback from "./pages/StudentInstructorFeedback";
+import MyProjects from "./pages/MyProjects";
 function Dashboard() {
   return (
     <div className="page-card">
@@ -62,6 +64,16 @@ function App() {
 <Route path="/instructor-invitations" element={<Layout><InstructorInvitations /></Layout>} />
 <Route path="/instructor-feedback" element={<Layout><InstructorFeedback /></Layout>} />
 <Route path="/student-feedback" element={<Layout><StudentInstructorFeedback /></Layout>} />
+<Route path="/my-projects" element={
+  <Layout>
+    <MyProjects />
+  </Layout>
+} />
+<Route path="/project-collaborators" element={
+  <Layout>
+    <ProjectCollaborators />
+  </Layout>
+} />
       </Routes>
     </BrowserRouter>
   );

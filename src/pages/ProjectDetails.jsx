@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function ProjectDetails() {
-  const project = JSON.parse(localStorage.getItem("createdProject"));
+  const [project, setProject] = useState(null);
   const [showFlagModal, setShowFlagModal] = useState(false);
   const [showAppealModal, setShowAppealModal] = useState(false);
   const [flagReason, setFlagReason] = useState("");
@@ -11,23 +11,38 @@ function ProjectDetails() {
   const role = localStorage.getItem("role");
   const currentUser = localStorage.getItem("currentUserEmail");
 
+  useEffect(() => {
+    // Load selected project from localStorage
+    const selected = JSON.parse(localStorage.getItem("selectedProject"));
+    if (selected) {
+      setProject(selected);
+    } else {
+      // Fallback to created project
+      const created = JSON.parse(localStorage.getItem("createdProject"));
+      setProject(created);
+    }
+  }, []);
+
+  // Check if this project is flagged
+  const flaggedProjects = JSON.parse(localStorage.getItem("flaggedProjects")) || [];
+  const isFlagged = flaggedProjects.some(p => p.id === project?.id);
+  const flagData = flaggedProjects.find(p => p.id === project?.id);
+
+  // Check if student has already appealed
+  const appeals = JSON.parse(localStorage.getItem("appeals")) || [];
+  const hasAppealed = appeals.some(a => a.projectId === project?.id);
+
   if (!project) {
     return (
       <div className="project-form-card">
         <h2>Project Details</h2>
-        <p>No project created yet. Go to Create Project first.</p>
+        <p>No project selected. Go to "My Projects" to view a project.</p>
+        <button className="primary" onClick={() => window.location.href = "/my-projects"}>
+          View My Projects
+        </button>
       </div>
     );
   }
-
-  // Check if this project is flagged
-  const flaggedProjects = JSON.parse(localStorage.getItem("flaggedProjects")) || [];
-  const isFlagged = flaggedProjects.some(p => p.id === project.id);
-  const flagData = flaggedProjects.find(p => p.id === project.id);
-
-  // Check if student has already appealed
-  const appeals = JSON.parse(localStorage.getItem("appeals")) || [];
-  const hasAppealed = appeals.some(a => a.projectId === project.id);
 
   function handleFlagProject() {
     if (!flagReason.trim()) {
@@ -40,7 +55,7 @@ function ProjectDetails() {
     const newFlag = {
       id: project.id,
       title: project.title,
-      studentEmail: project.studentEmail || currentUser,
+      studentEmail: project.studentEmail,
       reason: flagReason,
       flaggedBy: currentUser,
       flaggedAt: new Date().toISOString(),
@@ -50,12 +65,11 @@ function ProjectDetails() {
     flaggedProjects.push(newFlag);
     localStorage.setItem("flaggedProjects", JSON.stringify(flaggedProjects));
     
-    // Req 60: Student receives notification when project flagged
     const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
     notifications.push({
       id: Date.now(),
-      to: project.studentEmail || currentUser,
-      message: `Your project "${project.title}" has been flagged for: ${flagReason}. Please submit an appeal if you disagree.`,
+      to: project.studentEmail,
+      message: `Your project "${project.title}" has been flagged for: ${flagReason}`,
       read: false,
       createdAt: new Date().toISOString(),
       type: "flag"
@@ -69,7 +83,6 @@ function ProjectDetails() {
     setTimeout(() => setMessage(""), 3000);
   }
 
-  // Req 61: Student sends appeal to unflag
   function handleSendAppeal() {
     if (!appealMessage.trim()) {
       setMessage("Please write an appeal message explaining your point of view");
@@ -91,7 +104,6 @@ function ProjectDetails() {
     appeals.push(newAppeal);
     localStorage.setItem("appeals", JSON.stringify(appeals));
     
-    // Notify admin about new appeal
     const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
     notifications.push({
       id: Date.now(),
@@ -103,7 +115,7 @@ function ProjectDetails() {
     });
     localStorage.setItem("notifications", JSON.stringify(notifications));
     
-    setMessage("Appeal sent successfully. Admin will review your case.");
+    setMessage("Appeal sent successfully. Admin will review.");
     setShowAppealModal(false);
     setAppealMessage("");
     
@@ -114,16 +126,11 @@ function ProjectDetails() {
     <div className="project-form-card">
       <h2>{project.title}</h2>
       
-      {/* Show flag status if project is flagged */}
       {isFlagged && (
         <div className="alert-box warning">
           <strong>⚠️ Project Flagged:</strong> {flagData?.reason}
           {role === "student" && currentUser === project.studentEmail && !hasAppealed && (
-            <button 
-              className="secondary-btn" 
-              onClick={() => setShowAppealModal(true)}
-              style={{ marginTop: "10px" }}
-            >
+            <button className="secondary-btn" onClick={() => setShowAppealModal(true)} style={{ marginTop: "10px" }}>
               📝 Submit Appeal
             </button>
           )}
@@ -138,7 +145,11 @@ function ProjectDetails() {
       <p><strong>Programming Languages:</strong> {project.programmingLanguages}</p>
       <p><strong>Project Report:</strong> {project.report}</p>
       <p><strong>Demo Video:</strong> <a href={project.demo} target="_blank" rel="noopener noreferrer">{project.demo}</a></p>
-      <p><strong>Visibility:</strong> {project.visibility}</p>
+      <p><strong>Visibility:</strong> 
+        <span className={`visibility-badge ${project.visibility === "Public" ? "public" : "private"}`}>
+          {project.visibility === "Public" ? "🌍 Public" : "🔒 Private"}
+        </span>
+      </p>
       <p><strong>Creation Date:</strong> {project.creationDate}</p>
       
       {project.course === "Bachelor Project" && (
@@ -152,13 +163,12 @@ function ProjectDetails() {
       <p><strong>Collaborator Email:</strong> {project.collaborator}</p>
       <p><strong>Collaborator Role:</strong> {project.role}</p>
       
-      {/* Req 59: Flag button - visible to all except project owner? */}
       {role !== "student" || currentUser !== project.studentEmail ? (
         <button 
-          className="secondary-btn danger-btn" 
+          className="danger-btn" 
           onClick={() => setShowFlagModal(true)}
           disabled={isFlagged}
-          style={{ marginTop: "20px", background: isFlagged ? "#ccc" : "#dc2626", color: "white" }}
+          style={{ marginTop: "20px" }}
         >
           🚩 Flag as Inappropriate
         </button>
@@ -178,14 +188,17 @@ function ProjectDetails() {
         </>
       )}
 
+      <button className="secondary-btn" onClick={() => window.location.href = "/my-projects"} style={{ marginTop: "20px" }}>
+        ← Back to My Projects
+      </button>
+
       {/* Flag Modal */}
       {showFlagModal && (
         <div className="modal-overlay" onClick={() => setShowFlagModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>🚩 Flag Project: {project.title}</h3>
-            <p>Please provide a reason for flagging this project:</p>
             <textarea
-              placeholder="Example: Plagiarism, inappropriate content, copyright violation, etc."
+              placeholder="Reason for flagging..."
               value={flagReason}
               onChange={(e) => setFlagReason(e.target.value)}
               rows="4"
@@ -204,9 +217,8 @@ function ProjectDetails() {
         <div className="modal-overlay" onClick={() => setShowAppealModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>📝 Submit Appeal</h3>
-            <p>Explain why your project should be unflagged:</p>
             <textarea
-              placeholder="Write your explanation here... Provide evidence or clarification about why this flag should be removed."
+              placeholder="Explain why your project should be unflagged..."
               value={appealMessage}
               onChange={(e) => setAppealMessage(e.target.value)}
               rows="5"

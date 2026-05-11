@@ -64,70 +64,91 @@ function Auth() {
   }
 
   function registerAccount() {
-    setError("");
-    setMessage("");
+  setError("");
+  setMessage("");
 
-    if (!register.email || !register.password) {
-      setError("Please enter email and password.");
-      return;
-    }
-
-    if (!isStrongPassword(register.password)) {
-      setError("Password must be at least 8 characters and include a special character.");
-      return;
-    }
-
-    if (registerRole === "student" && !register.email.endsWith("@student.guc.edu.eg")) {
-      setError("Student email must be like example@student.guc.edu.eg");
-      return;
-    }
-
-    if (registerRole === "instructor" && !register.email.endsWith("@guc.edu.eg")) {
-      setError("Course instructor email must be like example@guc.edu.eg");
-      return;
-    }
-
-    if (
-      registerRole === "employer" &&
-      !(
-        register.email.endsWith("@gmail.com") ||
-        register.email.endsWith("@hotmail.com") ||
-        register.email.endsWith("@yahoo.com")
-      )
-    ) {
-      setError("Employer email must be Gmail, Hotmail, or Yahoo.");
-      return;
-    }
-
-    if (registerRole === "employer" && !register.document) {
-      setError("Employer must upload PDF verification document.");
-      return;
-    }
-
-    const users = getUsers();
-
-    if (users.some((u) => u.email === register.email)) {
-      setError("This email is already registered.");
-      return;
-    }
-
-    const newUser = {
-      firstName: register.firstName,
-      lastName: register.lastName,
-      companyName: register.companyName,
-      email: register.email,
-      password: register.password,
-      role: registerRole,
-      documentName: register.document?.name || "",
-      verificationStatus: registerRole === "employer" ? "Pending" : "Accepted",
-    };
-
-    saveUsers([...users, newUser]);
-    localStorage.setItem("registeredUser", JSON.stringify(newUser));
-
-    setMessage("Account registered successfully. You can now login.");
-    setMode("login");
+  if (!register.email || !register.password) {
+    setError("Please enter email and password.");
+    return;
   }
+
+  if (!isStrongPassword(register.password)) {
+    setError("Password must be at least 8 characters and include a special character.");
+    return;
+  }
+
+  if (registerRole === "student" && !register.email.endsWith("@student.guc.edu.eg")) {
+    setError("Student email must be like example@student.guc.edu.eg");
+    return;
+  }
+
+  if (registerRole === "instructor" && !register.email.endsWith("@guc.edu.eg")) {
+    setError("Course instructor email must be like example@guc.edu.eg");
+    return;
+  }
+
+  if (
+    registerRole === "employer" &&
+    !(
+      register.email.endsWith("@gmail.com") ||
+      register.email.endsWith("@hotmail.com") ||
+      register.email.endsWith("@yahoo.com")
+    )
+  ) {
+    setError("Employer email must be Gmail, Hotmail, or Yahoo.");
+    return;
+  }
+
+  if (registerRole === "employer" && !register.document) {
+    setError("Employer must upload PDF verification document.");
+    return;
+  }
+
+  const users = getUsers();
+
+  if (users.some((u) => u.email === register.email)) {
+    setError("This email is already registered.");
+    return;
+  }
+
+  // ✅ ADD THIS PART - Store the actual file for employers
+  if (registerRole === "employer" && register.document) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const fileContent = e.target.result;
+      
+      // Store file in uploadedDocuments
+      const uploadedFiles = JSON.parse(localStorage.getItem("uploadedDocuments")) || {};
+      uploadedFiles[`${register.email}_${register.document.name}`] = {
+        name: register.document.name,
+        content: fileContent,
+        type: register.document.type,
+        uploadedAt: new Date().toISOString()
+      };
+      localStorage.setItem("uploadedDocuments", JSON.stringify(uploadedFiles));
+    };
+    reader.readAsDataURL(register.document);
+  }
+
+  // Create the new user object
+  const newUser = {
+    firstName: register.firstName,
+    lastName: register.lastName,
+    companyName: register.companyName,
+    email: register.email,
+    password: register.password,
+    role: registerRole,
+    documentName: register.document?.name || "",
+    documentType: register.document?.type || "",
+    verificationStatus: registerRole === "employer" ? "Pending" : "Accepted",
+  };
+
+  saveUsers([...users, newUser]);
+  localStorage.setItem("registeredUser", JSON.stringify(newUser));
+
+  setMessage("Account registered successfully. You can now login.");
+  setMode("login");
+}
 
   function handleLogin() {
     setError("");
