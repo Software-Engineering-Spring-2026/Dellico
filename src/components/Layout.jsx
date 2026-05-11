@@ -10,20 +10,15 @@ function Layout({ children }) {
   }
 
   return (
-    <div className="app">
+    <div className="template-layout">
       <Sidebar />
 
-      <main className="main">
-        <header className="topbar">
-          <div>
-            <h1>Project Portfolio Platform</h1>
-            <p>Manage, explore, and showcase projects</p>
-          </div>
-
-          <button className="logout-btn" onClick={logout}>
+      <main className="template-content">
+        <div className="template-topbar">
+          <button className="template-logout" onClick={logout}>
             Logout
           </button>
-        </header>
+        </div>
 
         {children}
       </main>

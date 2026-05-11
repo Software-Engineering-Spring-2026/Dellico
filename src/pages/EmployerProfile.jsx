@@ -1,77 +1,188 @@
+import { useState } from "react";
+
 function EmployerProfile() {
+  const [companyProfile, setCompanyProfile] = useState({
+    biography: "",
+    address: "",
+    contact: "",
+    mapsLink: "",
+    logo: null,
+    documents: null,
+  });
+
+  const [savedProfile, setSavedProfile] = useState(null);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setCompanyProfile({
+      ...companyProfile,
+      [name]: value,
+    });
+  };
+
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+
+    setCompanyProfile({
+      ...companyProfile,
+      [name]: files[0],
+    });
+  };
+
+  const handleSave = () => {
+    setSavedProfile(companyProfile);
+
+    localStorage.setItem(
+      "employerProfile",
+      JSON.stringify(companyProfile)
+    );
+  };
+
+  const handleRemove = () => {
+    setCompanyProfile({
+      biography: "",
+      address: "",
+      contact: "",
+      mapsLink: "",
+      logo: null,
+      documents: null,
+    });
+
+    setSavedProfile(null);
+
+    localStorage.removeItem("employerProfile");
+  };
+
   return (
-    <div className="page-card wide-card">
+    <div className="project-form-card">
       <h2>Employer Company Profile</h2>
-      <p>Manage company profile, location, logo, verification documents, internships, and applicants.</p>
 
-      <section className="profile-section">
-        <h3>Company Information</h3>
-        <textarea placeholder="Short company biography" />
-        <input placeholder="Company address" />
-        <input placeholder="Contact information" />
-        <input placeholder="Google Maps location link" />
-        <label>Upload company logo</label>
-        <input type="file" accept="image/*" />
-        <label>Upload PDF documents such as tax certificate</label>
-        <input type="file" accept=".pdf" />
+      <p>
+        Manage company profile, location, logo,
+        verification documents, internships, and applicants.
+      </p>
 
-        <button className="primary">Add / View / Update Company Profile</button>
-        <button className="secondary-btn">Set Google Maps Location</button>
-        <button className="secondary-btn">Remove Selected Information</button>
-      </section>
+      <label>Short Company Biography</label>
 
-      <section className="profile-section">
-        <h3>Create Internship Details</h3>
-        <input placeholder="Internship title" />
-        <textarea placeholder="Responsibilities" />
-        <input placeholder="Required skills" />
-        <input placeholder="Duration" />
-        <input type="date" />
-        <button className="primary">Post Internship</button>
-      </section>
+      <textarea
+        name="biography"
+        placeholder="Write a short company biography"
+        value={companyProfile.biography}
+        onChange={handleChange}
+      />
 
-      <section className="profile-section">
-        <h3>My Offered Internships</h3>
-        <div className="list-card">
-          <h4>Frontend React Intern</h4>
-          <p>Status: Currently Hiring</p>
-          <button className="secondary-btn">Set Currently Hiring</button>
-          <button className="secondary-btn">Set Position Filled</button>
-          <button className="secondary-btn">Archive</button>
-          <button className="secondary-btn">Unarchive</button>
-        </div>
-      </section>
+      <label>Company Address</label>
 
-      <section className="profile-section">
-        <h3>Student Applications</h3>
-        <select>
-          <option>Sort applications by top contributors</option>
-          <option>Highest contributors first</option>
-        </select>
+      <input
+        type="text"
+        name="address"
+        placeholder="Enter company address"
+        value={companyProfile.address}
+        onChange={handleChange}
+      />
 
-        <div className="list-card">
-          <h4>Lily Abdelaziz</h4>
-          <p>Applied for: Frontend React Intern</p>
-          <p>Top contributor score: 95%</p>
-          <select>
-            <option>Nominated</option>
-            <option>Accepted</option>
-            <option>Rejected</option>
-          </select>
-          <button className="primary">Save Applicant Status</button>
-        </div>
-      </section>
+      <label>Contact Information</label>
 
-      <section className="profile-section">
-        <h3>Search Course Instructors</h3>
-        <input placeholder="Search by instructor name or course" />
-        <button className="primary">Search</button>
-        <div className="list-card">
-          <h4>Dr. Mervat Abuelkheir</h4>
-          <p><b>Linked Courses:</b> Software Engineering, Bachelor Project</p>
-          <button className="secondary-btn">Select and View Full Profile</button>
-        </div>
-      </section>
+      <input
+        type="text"
+        name="contact"
+        placeholder="Enter contact email or phone number"
+        value={companyProfile.contact}
+        onChange={handleChange}
+      />
+
+      <label>Google Maps Location Link</label>
+
+      <input
+        type="text"
+        name="mapsLink"
+        placeholder="Paste Google Maps location link"
+        value={companyProfile.mapsLink}
+        onChange={handleChange}
+      />
+
+      <label>Upload Company Logo</label>
+
+      <input
+        type="file"
+        name="logo"
+        accept="image/*"
+        onChange={handleFileChange}
+      />
+
+      <label>
+        Upload PDF Documents such as Tax Certificate
+      </label>
+
+      <input
+        type="file"
+        name="documents"
+        accept="application/pdf"
+        onChange={handleFileChange}
+      />
+
+      <div className="button-row">
+        <button
+          className="primary"
+          type="button"
+          onClick={handleSave}
+        >
+          Add / View / Update
+        </button>
+
+        <button
+          className="secondary-btn"
+          type="button"
+        >
+          Set Google Maps Location
+        </button>
+
+        <button
+          className="secondary-btn"
+          type="button"
+          onClick={handleRemove}
+        >
+          Remove
+        </button>
+      </div>
+
+      {savedProfile && (
+        <section className="profile-section">
+          <h3>Saved Company Profile</h3>
+
+          <p>
+            <strong>Biography:</strong>{" "}
+            {savedProfile.biography}
+          </p>
+
+          <p>
+            <strong>Address:</strong>{" "}
+            {savedProfile.address}
+          </p>
+
+          <p>
+            <strong>Contact:</strong>{" "}
+            {savedProfile.contact}
+          </p>
+
+          <p>
+            <strong>Google Maps Link:</strong>{" "}
+            {savedProfile.mapsLink}
+          </p>
+
+          <p>
+            <strong>Company Logo:</strong>{" "}
+            {savedProfile.logo?.name || "No logo uploaded"}
+          </p>
+
+          <p>
+            <strong>Verification Documents:</strong>{" "}
+            {savedProfile.documents?.name ||
+              "No documents uploaded"}
+          </p>
+        </section>
+      )}
     </div>
   );
 }

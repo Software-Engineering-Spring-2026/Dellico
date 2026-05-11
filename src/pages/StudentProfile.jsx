@@ -1,51 +1,214 @@
+import React, { useState, useEffect } from "react";
+
 function StudentProfile() {
+  const savedPortfolio = JSON.parse(localStorage.getItem("studentPortfolio"));
+
+  const [portfolio, setPortfolio] = useState(
+    savedPortfolio || {
+      major: "",
+      skills: "",
+      linkedin: "",
+      pictureName: "",
+    }
+  );
+
+  const [viewPortfolio, setViewPortfolio] = useState(false);
+  const [message, setMessage] = useState("");
+  const [projects, setProjects] = useState([]);
+  const [selectedProjects, setSelectedProjects] = useState(() => {
+    const saved = localStorage.getItem("visibleProjects");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  function handleChange(e) {
+    setPortfolio({
+      ...portfolio,
+      [e.target.name]: e.target.value,
+    });
+  }
+
+  function handleFileChange(e) {
+    setPortfolio({
+      ...portfolio,
+      pictureName: e.target.files[0]?.name || "",
+    });
+  }
+
+  function validatePortfolio() {
+    if (!portfolio.major.trim()) return "Please enter your major.";
+    if (!portfolio.skills.trim()) return "Please enter your skills.";
+    if (!portfolio.linkedin.trim()) return "Please enter your LinkedIn link.";
+    if (!portfolio.linkedin.startsWith("https://")) {
+      return "LinkedIn link must start with https://";
+    }
+    return "";
+  }
+
+  function addOrUpdatePortfolio() {
+    const error = validatePortfolio();
+
+    if (error) {
+      setMessage(error);
+      return;
+    }
+
+    localStorage.setItem("studentPortfolio", JSON.stringify(portfolio));
+    setMessage("Portfolio information saved successfully.");
+    setViewPortfolio(true);
+  }
+
+  function removePortfolio() {
+    localStorage.removeItem("studentPortfolio");
+
+    setPortfolio({
+      major: "",
+      skills: "",
+      linkedin: "",
+      pictureName: "",
+    });
+
+    setViewPortfolio(false);
+    setMessage("Portfolio information removed successfully.");
+  }
+
+  function viewSavedPortfolio() {
+    const saved = JSON.parse(localStorage.getItem("studentPortfolio"));
+
+    if (!saved) {
+      setMessage("No portfolio information saved yet.");
+      setViewPortfolio(false);
+      return;
+    }
+
+    setPortfolio(saved);
+    setViewPortfolio(true);
+    setMessage("Viewing saved portfolio information.");
+  }
+
+  // Load projects from localStorage
+  useEffect(() => {
+    const allProjects = JSON.parse(localStorage.getItem("allProjects")) || [];
+    const currentUserEmail = localStorage.getItem("currentUserEmail");
+    const myProjects = allProjects.filter(p => p.studentEmail === currentUserEmail);
+    setProjects(myProjects);
+  }, []);
+
+  function toggleProjectVisibility(projectId) {
+    let updated;
+    if (selectedProjects.includes(projectId)) {
+      updated = selectedProjects.filter(id => id !== projectId);
+    } else {
+      updated = [...selectedProjects, projectId];
+    }
+    setSelectedProjects(updated);
+    localStorage.setItem("visibleProjects", JSON.stringify(updated));
+    setMessage("Project visibility updated!");
+    
+    // Clear message after 3 seconds
+    setTimeout(() => setMessage(""), 3000);
+  }
+
   return (
-    <div className="page-card wide-card">
+    <div className="project-form-card">
       <h2>Student Portfolio</h2>
-      <p>Manage portfolio information, instructor search, statistics, and completed internships.</p>
 
-      <section className="profile-section">
-        <h3>Portfolio Information</h3>
-        <input placeholder="Major" />
-        <input placeholder="Skills" />
-        <input placeholder="LinkedIn link acting as CV" />
-        <label>Upload profile picture</label>
-        <input type="file" accept="image/*" />
+      <p>
+        Add, view, update, and remove portfolio information.
+        LinkedIn link acts as the CV.
+      </p>
 
-        <button className="primary">Add / View / Update Portfolio</button>
-        <button className="secondary-btn">Remove Selected Information</button>
-      </section>
+      <label>Major</label>
+      <input
+        name="major"
+        value={portfolio.major}
+        onChange={handleChange}
+        placeholder="Example: Computer Science"
+      />
 
-      <section className="profile-section">
-        <h3>Search Course Instructors</h3>
-        <input placeholder="Search by instructor name or course" />
-        <button className="primary">Search</button>
+      <label>Skills</label>
+      <input
+        name="skills"
+        value={portfolio.skills}
+        onChange={handleChange}
+        placeholder="Example: Communication, SQL, React"
+      />
 
-        <div className="list-card">
-          <h4>Dr. Aya Salama</h4>
-          <p><b>Linked Courses:</b> Software Engineering, Bachelor Project</p>
-          <p><b>Biography:</b> Software engineering instructor.</p>
-          <p><b>Research Interests:</b> Requirements engineering and architecture.</p>
-          <p><b>Education:</b> PhD in Computer Science.</p>
-          <button className="secondary-btn">Select and View Full Profile</button>
-        </div>
-      </section>
+      <label>LinkedIn Link / CV</label>
+      <input
+        name="linkedin"
+        value={portfolio.linkedin}
+        onChange={handleChange}
+        placeholder="Example: https://linkedin.com/in/yourname"
+      />
 
-      <section className="profile-section">
-        <h3>Programming Language Statistics</h3>
-        <div className="mini-stats">
-          <div><h4>JavaScript</h4><p>Most used language</p></div>
-          <div><h4>72%</h4><p>JavaScript usage</p></div>
-          <div><h4>18%</h4><p>Python usage</p></div>
-          <div><h4>10%</h4><p>Java usage</p></div>
-        </div>
-      </section>
+      <label>Upload Profile Picture</label>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+      />
 
-      <section className="profile-section">
-        <h3>Completed Internships</h3>
-        <div className="list-card">Frontend Intern — Dell Technologies</div>
-        <div className="list-card">Data Analytics Intern — Coca-Cola HBC</div>
-      </section>
+      <div className="button-row">
+        <button
+          className="primary"
+          type="button"
+          onClick={addOrUpdatePortfolio}
+        >
+          Add / Update
+        </button>
+
+        <button
+          className="secondary-btn"
+          type="button"
+          onClick={viewSavedPortfolio}
+        >
+          View
+        </button>
+
+        <button
+          className="secondary-btn"
+          type="button"
+          onClick={removePortfolio}
+        >
+          Remove
+        </button>
+      </div>
+
+      {message && (
+        <p className="success-text">
+          {message}
+        </p>
+      )}
+
+      {viewPortfolio && (
+        <section className="profile-section">
+          <h3>Saved Portfolio Information</h3>
+          <p><strong>Major:</strong> {portfolio.major}</p>
+          <p><strong>Skills:</strong> {portfolio.skills}</p>
+          <p><strong>LinkedIn / CV:</strong> {portfolio.linkedin}</p>
+          <p><strong>Profile Picture:</strong> {portfolio.pictureName || "No picture uploaded"}</p>
+        </section>
+      )}
+
+      {/* Projects Section - Req 21, 22 */}
+      {projects.length > 0 && (
+        <section className="profile-section">
+          <h3>My Projects ({projects.length})</h3>
+          <p>Select which projects to show on your portfolio:</p>
+          {projects.map(project => (
+            <div key={project.id} className="list-card">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={selectedProjects.includes(project.id)}
+                  onChange={() => toggleProjectVisibility(project.id)}
+                />
+                <strong>{project.title}</strong> - {project.course}
+              </label>
+            </div>
+          ))}
+        </section>
+      )}
     </div>
   );
 }

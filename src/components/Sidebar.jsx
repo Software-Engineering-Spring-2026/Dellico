@@ -1,80 +1,98 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
-
-const menus = {
-  student: [
-    {
-      title: "Student",
-      items: [
-        { path: "/student-profile", label: "My Portfolio" },
-        { path: "/profile", label: "Search Instructors" },
-        { path: "/internships", label: "Internships" },
-        { path: "/settings", label: "Notification Settings" },
-      ],
-    },
-  ],
-
-  instructor: [
-    {
-      title: "Course Instructor",
-      items: [
-        { path: "/instructor-profile", label: "My Profile" },
-        { path: "/profile", label: "Search Instructors" },
-        { path: "/settings", label: "Notification Settings" },
-      ],
-    },
-  ],
-
-  employer: [
-    {
-      title: "Employer",
-      items: [
-        { path: "/employer-profile", label: "Company Profile" },
-        { path: "/profile", label: "Search Instructors" },
-        { path: "/settings", label: "Notification Settings" },
-      ],
-    },
-  ],
-
-  admin: [
-    {
-      title: "Administrator",
-      items: [
-        { path: "/admin", label: "Platform Statistics" },
-        { path: "/profile", label: "Search Instructors" },
-        { path: "/settings", label: "Notification Settings" },
-      ],
-    },
-  ],
-};
 
 function Sidebar() {
   const role = localStorage.getItem("role") || "student";
-  const menuSections = menus[role] || menus.student;
+  const [projectsOpen, setProjectsOpen] = useState(true);
+
+  const menus = {
+    student: [
+      { path: "/student-profile", label: "My Portfolio", icon: "👩‍🎓" },
+      { path: "/profile", label: "Search Instructors", icon: "👨‍🏫" },
+      { path: "/internships", label: "Internships", icon: "💼" },
+      { path: "/settings", label: "Settings", icon: "⚙️" },
+      {
+        label: "Projects",
+        icon: "📁",
+        children: [
+          { path: "/create", label: "Create Project" },
+          { path: "/student-workspace", label: "Project Tasks" },
+          { path: "/project-details", label: "Project Details" },
+        ],
+      },
+      { path: "/student-feedback", label: "Instructor Feedback", icon: "⭐" },
+    ],
+
+    instructor: [
+      { path: "/instructor-profile", label: "My Profile", icon: "👨‍🏫" },
+      { path: "/instructor-courses", label: "My Courses", icon: "📚" },
+      { path: "/instructor-invitations", label: "Invitations", icon: "📩" },
+      { path: "/instructor-feedback", label: "Feedback", icon: "⭐" },
+      { path: "/profile", label: "Search Instructors", icon: "🔎" },
+      { path: "/settings", label: "Settings", icon: "⚙️" },
+    ],
+
+    employer: [
+      { path: "/employer-profile", label: "Company Profile", icon: "🏢" },
+      { path: "/employer", label: "Manage Internships", icon: "💼" },
+      { path: "/profile", label: "Search Instructors", icon: "🔎" },
+      { path: "/settings", label: "Settings", icon: "⚙️" },
+    ],
+
+    admin: [
+  { path: "/admin", label: "Admin Dashboard", icon: "📊" },
+  
+  { path: "/profile", label: "Search Instructors", icon: "🔎" },
+  { path: "/settings", label: "Settings", icon: "⚙️" },
+],
+  };
+
+  const items = menus[role] || menus.student;
 
   return (
-    <aside className="sidebar">
-      <div className="brand">
-        <div className="logo">D</div>
-        <div>
-          <h2>Dellico</h2>
-          <p>{role.charAt(0).toUpperCase() + role.slice(1)} View</p>
-        </div>
+    <aside className="template-sidebar">
+      <div className="sidebar-brand">
+        
+        
       </div>
 
-      <nav className="menu">
-        {menuSections.map((section) => (
-          <div className="menu-section" key={section.title}>
-            <p className="menu-title">{section.title}</p>
+      <nav className="sidebar-nav">
+        {items.map((item) =>
+          item.children ? (
+            <div className="sidebar-dropdown" key={item.label}>
+              <button
+                type="button"
+                className="template-link dropdown-button"
+                onClick={() => setProjectsOpen(!projectsOpen)}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+                <span className="dropdown-arrow">
+                  {projectsOpen ? "▾" : "▸"}
+                </span>
+              </button>
 
-            <div className="menu-group">
-              {section.items.map((item) => (
-                <NavLink key={item.path} to={item.path}>
-                  {item.label}
-                </NavLink>
-              ))}
+              {projectsOpen && (
+                <div className="sidebar-submenu">
+                  {item.children.map((child) => (
+                    <NavLink
+                      key={child.path}
+                      to={child.path}
+                      className="sidebar-child-link"
+                    >
+                      {child.label}
+                    </NavLink>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          ) : (
+            <NavLink key={item.path} to={item.path} className="template-link">
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </NavLink>
+          )
+        )}
       </nav>
     </aside>
   );

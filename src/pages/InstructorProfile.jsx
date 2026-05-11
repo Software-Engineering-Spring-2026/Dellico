@@ -1,38 +1,124 @@
+import { useState } from "react";
+
 function InstructorProfile() {
+  const saved = JSON.parse(localStorage.getItem("instructorProfile"));
+
+  const [profile, setProfile] = useState(
+    saved || {
+      biography: "",
+      research: "",
+      education: "",
+      pictureName: "",
+    }
+  );
+
+  const [showProfile, setShowProfile] = useState(false);
+  const [message, setMessage] = useState("");
+
+  function handleChange(e) {
+    setProfile({ ...profile, [e.target.name]: e.target.value });
+  }
+
+  function handleFileChange(e) {
+    setProfile({
+      ...profile,
+      pictureName: e.target.files[0]?.name || "",
+    });
+  }
+
+  function saveProfile() {
+    if (!profile.biography || !profile.research || !profile.education) {
+      setMessage("Please fill biography, research interests, and education.");
+      return;
+    }
+
+    localStorage.setItem("instructorProfile", JSON.stringify(profile));
+    setMessage("Profile saved successfully.");
+    setShowProfile(true);
+  }
+
+  function viewProfile() {
+    const savedProfile = JSON.parse(localStorage.getItem("instructorProfile"));
+
+    if (!savedProfile) {
+      setMessage("No saved profile found.");
+      return;
+    }
+
+    setProfile(savedProfile);
+    setShowProfile(true);
+    setMessage("Viewing saved profile.");
+  }
+
+  function removeProfile() {
+    localStorage.removeItem("instructorProfile");
+
+    setProfile({
+      biography: "",
+      research: "",
+      education: "",
+      pictureName: "",
+    });
+
+    setShowProfile(false);
+    setMessage("Profile removed successfully.");
+  }
+
   return (
-    <div className="page-card wide-card">
+    <div className="project-form-card">
       <h2>Course Instructor Profile</h2>
-      <p>Manage instructor profile information and linked courses.</p>
+      <p>Add, view, update, and remove instructor profile information.</p>
 
-      <section className="profile-section">
-        <h3>Instructor Information</h3>
-        <textarea placeholder="Short biography" />
-        <input placeholder="Research interests" />
-        <input placeholder="Education background" />
-        <label>Upload profile picture</label>
-        <input type="file" accept="image/*" />
-        <input placeholder="Linked courses" />
+      <label>Short Biography</label>
+      <textarea
+        name="biography"
+        value={profile.biography}
+        onChange={handleChange}
+        placeholder="Write short biography"
+      />
 
-        <button className="primary">Add / View / Update Profile</button>
-        <button className="secondary-btn">Remove Selected Information</button>
-        <button className="secondary-btn">Link Myself to Course</button>
-        <button className="secondary-btn">Unlink Myself from Course</button>
-      </section>
+      <label>Research Interests</label>
+      <input
+        name="research"
+        value={profile.research}
+        onChange={handleChange}
+        placeholder="Example: UI/UX, software testing"
+      />
 
-      <section className="profile-section">
-        <h3>Search Course Instructors</h3>
-        <input placeholder="Search by instructor name or course" />
-        <button className="primary">Search</button>
+      <label>Education Background</label>
+      <input
+        name="education"
+        value={profile.education}
+        onChange={handleChange}
+        placeholder="Example: PhD in Computer Science"
+      />
 
-        <div className="list-card">
-          <h4>Eng. Nada Ibrahim</h4>
-          <p><b>Linked Courses:</b> Software Engineering Lab</p>
-          <p><b>Biography:</b> Teaching assistant supporting software engineering projects.</p>
-          <p><b>Research Interests:</b> UI/UX, frontend development, software testing.</p>
-          <p><b>Education:</b> MSc Candidate in Software Engineering.</p>
-          <button className="secondary-btn">Select and View Full Profile</button>
-        </div>
-      </section>
+      <label>Upload Profile Picture</label>
+      <input type="file" accept="image/*" onChange={handleFileChange} />
+
+      <div className="button-row">
+        <button className="primary" type="button" onClick={saveProfile}>
+          Add / Update
+        </button>
+        <button className="secondary-btn" type="button" onClick={viewProfile}>
+          View
+        </button>
+        <button className="secondary-btn" type="button" onClick={removeProfile}>
+          Remove
+        </button>
+      </div>
+
+      {message && <p className="success-text">{message}</p>}
+
+      {showProfile && (
+        <section className="profile-section">
+          <h3>Saved Instructor Profile</h3>
+          <p><strong>Biography:</strong> {profile.biography}</p>
+          <p><strong>Research Interests:</strong> {profile.research}</p>
+          <p><strong>Education:</strong> {profile.education}</p>
+          <p><strong>Picture:</strong> {profile.pictureName || "No picture uploaded"}</p>
+        </section>
+      )}
     </div>
   );
 }

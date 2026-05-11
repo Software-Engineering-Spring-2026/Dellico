@@ -19,6 +19,12 @@ import Notifications from "./pages/Notifications";
 import StudentProfile from "./pages/StudentProfile";
 import InstructorProfile from "./pages/InstructorProfile";
 import EmployerProfile from "./pages/EmployerProfile";
+import StudentWorkspace from "./pages/StudentWorkspace";
+import React, { useState } from "react";
+import InstructorCourses from "./pages/InstructorCourses";
+import InstructorInvitations from "./pages/InstructorInvitations";
+import InstructorFeedback from "./pages/InstructorFeedback";
+import StudentInstructorFeedback from "./pages/StudentInstructorFeedback";
 function Dashboard() {
   return (
     <div className="page-card">
@@ -37,13 +43,13 @@ function App() {
         <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
         <Route path="/profile" element={<Layout><Profile /></Layout>} />
         <Route path="/settings" element={<Layout><Settings /></Layout>} />
-        <Route path="/create-project" element={<Layout><CreateProject /></Layout>} />
+       <Route path="/create" element={<Layout><CreateProject /></Layout>} />
         <Route path="/project-details" element={<Layout><ProjectDetails /></Layout>} />
         <Route path="/workspace" element={<Layout><ProjectWorkspace /></Layout>} />
         <Route path="/browse-projects" element={<Layout><BrowseProjects /></Layout>} />
         <Route path="/browse-portfolios" element={<Layout><BrowsePortfolios /></Layout>} />
         <Route path="/favorites" element={<Layout><Favorites /></Layout>} />
-        <Route path="/admin" element={<Layout><Admin Panel  /></Layout>} />
+        <Route path="/admin" element={<Layout><Admin /></Layout>} />
         <Route path="/employer" element={<Layout><Employer /></Layout>} />
         <Route path="/internships" element={<Layout><Internships /></Layout>} />
         <Route path="/messages" element={<Layout><Messages /></Layout>} />
@@ -51,6 +57,11 @@ function App() {
         <Route path="/student-profile" element={<Layout><StudentProfile /></Layout>} />
 <Route path="/instructor-profile" element={<Layout><InstructorProfile /></Layout>} />
 <Route path="/employer-profile" element={<Layout><EmployerProfile /></Layout>} />
+<Route path="/student-workspace" element={<Layout><StudentWorkspace /></Layout>} />
+<Route path="/instructor-courses" element={<Layout><InstructorCourses /></Layout>} />
+<Route path="/instructor-invitations" element={<Layout><InstructorInvitations /></Layout>} />
+<Route path="/instructor-feedback" element={<Layout><InstructorFeedback /></Layout>} />
+<Route path="/student-feedback" element={<Layout><StudentInstructorFeedback /></Layout>} />
       </Routes>
     </BrowserRouter>
   );
